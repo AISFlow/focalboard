@@ -166,70 +166,8 @@ jobs:
           labels: ${{ needs.set-up.outputs.labels }}
           platforms: linux/arm64
 
-  build-armhf:
-    needs: [set-up]
-    runs-on: ubuntu-24.04-arm
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    steps:
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: true
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.RELEASE_VERSION }}
-
-      - name: Set Clean Version
-        run: |
-          # Set a clean version from the RELEASE_VERSION environment variable
-          CLEAN_VERSION="${{ env.RELEASE_VERSION }}"
-          echo "VERSION=${CLEAN_VERSION}" >> $GITHUB_ENV
-
-      - name: Log into GitHub Container Registry (GHCR)
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY_GHCR }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Log into Docker Registry
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY_DOCKER }}
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_TOKEN }}
-
-      - name: Build and push (armhf)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ env.REGISTRY_GHCR }}/${{ needs.set-up.outputs.lower_case_image_name }}:armhf
-            ${{ env.REGISTRY_DOCKER }}/${{ needs.set-up.outputs.lower_case_image_name }}:armhf
-          labels: ${{ needs.set-up.outputs.labels }}
-          platforms: linux/arm/v7
-
   manifest:
-    needs: [set-up, build-amd64, build-arm64, build-armhf]
+    needs: [set-up, build-amd64, build-arm64]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -278,7 +216,5 @@ jobs:
           sources: |
             ${{ env.REGISTRY_GHCR }}/${{ needs.set-up.outputs.lower_case_image_name }}:amd64
             ${{ env.REGISTRY_GHCR }}/${{ needs.set-up.outputs.lower_case_image_name }}:arm64
-            ${{ env.REGISTRY_GHCR }}/${{ needs.set-up.outputs.lower_case_image_name }}:armhf
             ${{ env.REGISTRY_DOCKER }}/${{ needs.set-up.outputs.lower_case_image_name }}:amd64
             ${{ env.REGISTRY_DOCKER }}/${{ needs.set-up.outputs.lower_case_image_name }}:arm64
-            ${{ env.REGISTRY_DOCKER }}/${{ needs.set-up.outputs.lower_case_image_name }}:armhf

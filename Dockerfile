@@ -1,7 +1,7 @@
 # -------------------------------------------------------------------
 # 1) Node.js build stage
 # -------------------------------------------------------------------
-FROM node:lts AS nodebuild
+FROM oven/bun:latest AS nodebuild
 
 WORKDIR /focalboard
 
@@ -15,16 +15,15 @@ RUN apt-get update && \
     dpkgArch="$(dpkg --print-architecture)" && \
     case "${dpkgArch##*-}" in \
         amd64) \
-            npm install --no-optional ;; \
+            bun install ;; \
         arm64) \
-            CPPFLAGS="-DPNG_ARM_NEON_OPT=0" npm install --no-optional ;; \
+            CPPFLAGS="-DPNG_ARM_NEON_OPT=0" bun install ;; \
         armhf) \
-            CPPFLAGS="-DPNG_ARM_NEON_OPT=0" npm install --no-optional ;; \
+            CPPFLAGS="-DPNG_ARM_NEON_OPT=0" bun install ;; \
         *) \
             echo "Unsupported architecture"; exit 1 ;; \
     esac && \
-    npm run pack && \
-    npx tsx compress-assets.ts
+    bun run pack
 
 # -------------------------------------------------------------------
 # 2) Go build stage

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "t1": "prettier --write .",
-    "build": "docker buildx build -t aisflow/focalboard:latest . --load"
+    "docker": "docker buildx build -t aisflow/focalboard:latest . --load"
   },
   "keywords": [],
   "author": "AisFlow",

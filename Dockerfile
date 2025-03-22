@@ -1,6 +1,6 @@
-# -------------------------------------------------------------------
-# 1) Node.js build stage
-# -------------------------------------------------------------------
+# syntax=docker/dockerfile:1
+
+# -✂- this stage is Node.js build stage -------------------------------------------------
 FROM node:lts AS nodebuild
 
 WORKDIR /focalboard
@@ -8,10 +8,12 @@ WORKDIR /focalboard
 ADD https://github.com/aisflow/focalboard-ko.git /focalboard/
 
 WORKDIR /focalboard/webapp/
-RUN apt-get update && \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    --mount=type=cache,target=/root/.npm,sharing=locked \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
         libtool automake autoconf pkg-config nasm build-essential zstd && \
-    rm -rf /var/lib/apt/lists/* && \
     dpkgArch="$(dpkg --print-architecture)" && \
     case "${dpkgArch##*-}" in \
         amd64) \
@@ -23,12 +25,9 @@ RUN apt-get update && \
         *) \
             echo "Unsupported architecture"; exit 1 ;; \
     esac && \
-    npm run pack && \
-    npx tsx compress-assets.ts
+    npm run pack
 
-# -------------------------------------------------------------------
-# 2) Go build stage
-# -------------------------------------------------------------------
+# -✂- this stage is Golang build stage -------------------------------------------------
 FROM golang:bookworm AS gobuild
 
 ARG TARGETOS
@@ -37,23 +36,25 @@ ARG TARGETARCH
 WORKDIR /go/src/focalboard
 ADD https://github.com/aisflow/focalboard-ko.git /go/src/focalboard/
 
-RUN EXCLUDE_PLUGIN=true \
+RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
+    EXCLUDE_PLUGIN=true \
     EXCLUDE_SERVER=true \
     EXCLUDE_ENTERPRISE=true \
     make server-docker os=${TARGETOS} arch=${TARGETARCH}
 
-# -------------------------------------------------------------------
-# 3) debian:bookworm-slim
-# -------------------------------------------------------------------
+# -✂- this stage is final stage -------------------------------------------------
 FROM debian:bookworm-slim AS final
 
 ENV GOSU_VERSION=1.17
 ENV TINI_VERSION=v0.19.0
 ENV PATH="/opt/focalboard/bin:$PATH"
+ENV UID=1001
+ENV GID=1001
+ENV TZ=Asia/Seoul
 
 RUN set -eux; \
-    groupadd --gid 1001 focalboard; \
-    useradd --uid 1001 --gid 1001 --home-dir /opt/focalboard focalboard; \
+    groupadd --gid ${UID} focalboard; \
+    useradd --uid ${UID} --gid ${GID} --home-dir /opt/focalboard focalboard; \
     install -d -o focalboard -g focalboard -m 700 /opt/focalboard
 
 RUN set -eux; \
@@ -106,7 +107,6 @@ COPY scripts/start.sh /usr/bin/start
 RUN mkdir -p /opt/focalboard/data/files && \
     chown -R focalboard:focalboard /opt/focalboard
 
-EXPOSE 8000/tcp
 VOLUME /opt/focalboard/data
 
 ENTRYPOINT ["tini", "--", "start"]

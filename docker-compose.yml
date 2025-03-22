@@ -1,0 +1,14 @@
+services:
+  focalboard:
+    image: aisflow/focalboard:latest
+    container_name: focalboard
+    restart: always
+    volumes:
+      - ./volumes/focalboard/config:/config
+      - ./volumes/focalboard/data:/data
+    ports:
+      - '8000:8000'
+    environment:
+      - UID=1000
+      - GID=1000
+      - TZ=Asia/Seoul

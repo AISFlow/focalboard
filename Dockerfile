@@ -1,13 +1,14 @@
 # -------------------------------------------------------------------
 # 1) Node.js build stage
 # -------------------------------------------------------------------
-FROM oven/bun:latest AS nodebuild
+FROM node:lts AS nodebuild
 
 WORKDIR /focalboard
 
 ADD https://github.com/aisflow/focalboard-ko.git /focalboard/
 
 WORKDIR /focalboard/webapp/
+RUN corepack enable
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libtool automake autoconf pkg-config nasm build-essential zstd && \
@@ -15,15 +16,15 @@ RUN apt-get update && \
     dpkgArch="$(dpkg --print-architecture)" && \
     case "${dpkgArch##*-}" in \
         amd64) \
-            bun install ;; \
+            pnpm install --no-optional ;; \
         arm64) \
-            CPPFLAGS="-DPNG_ARM_NEON_OPT=0" bun install ;; \
+            CPPFLAGS="-DPNG_ARM_NEON_OPT=0" pnpm install --no-optional ;; \
         armhf) \
-            CPPFLAGS="-DPNG_ARM_NEON_OPT=0" bun install ;; \
+            CPPFLAGS="-DPNG_ARM_NEON_OPT=0" pnpm install --no-optional ;; \
         *) \
             echo "Unsupported architecture"; exit 1 ;; \
     esac && \
-    bun run pack
+    pnpm run pack
 
 # -------------------------------------------------------------------
 # 2) Go build stage

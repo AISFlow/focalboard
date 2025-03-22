@@ -8,7 +8,6 @@ WORKDIR /focalboard
 ADD https://github.com/aisflow/focalboard-ko.git /focalboard/
 
 WORKDIR /focalboard/webapp/
-RUN corepack enable
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libtool automake autoconf pkg-config nasm build-essential zstd && \
@@ -16,15 +15,15 @@ RUN apt-get update && \
     dpkgArch="$(dpkg --print-architecture)" && \
     case "${dpkgArch##*-}" in \
         amd64) \
-            pnpm install --no-optional ;; \
+            npm install --no-optional ;; \
         arm64) \
-            CPPFLAGS="-DPNG_ARM_NEON_OPT=0" pnpm install --no-optional ;; \
+            CPPFLAGS="-DPNG_ARM_NEON_OPT=0" npm install --no-optional ;; \
         armhf) \
-            CPPFLAGS="-DPNG_ARM_NEON_OPT=0" pnpm install --no-optional ;; \
+            CPPFLAGS="-DPNG_ARM_NEON_OPT=0" npm install --no-optional ;; \
         *) \
             echo "Unsupported architecture"; exit 1 ;; \
     esac && \
-    pnpm run pack
+    npm run pack
 
 # -------------------------------------------------------------------
 # 2) Go build stage

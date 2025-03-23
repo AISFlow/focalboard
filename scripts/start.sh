@@ -23,9 +23,13 @@ if [ "$(id -u)" -eq 0 ]; then
         fi
     fi
 
-    # Ensure required directories exist with proper ownership
-    mkdir -p /opt/focalboard/data /opt/focalboard/files
-    chown -R focalboard:focalboard /opt/focalboard
+    # Check if any file/dir under /app is not owned by TARGET_UID:GID
+    if find /app \! -uid "$TARGET_UID" -o \! -gid "$TARGET_GID" | grep -q .; then
+        echo "Applying chown -R focalboard:focalboard /opt/focalboard/"
+        chown -R focalboard:focalboard /opt/focalboard/
+    else
+        echo "Skipping chown: all files under /app are already owned by $TARGET_UID:$TARGET_GID"
+    fi
 
     exec gosu focalboard "$@"
 else

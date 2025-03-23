@@ -97,10 +97,10 @@ RUN set -eux; \
         apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
 
 WORKDIR /opt/focalboard
-COPY --link --from=nodebuild --chown=1001 /focalboard/webapp/pack /opt/focalboard/pack/
-COPY --link --from=gobuild --chown=1001 /go/src/focalboard/bin/docker/focalboard-server /opt/focalboard/bin/
-COPY --link --from=gobuild --chown=1001 /go/src/focalboard/LICENSE.txt /opt/focalboard/LICENSE.txt
-COPY --link --from=gobuild --chown=1001 /go/src/focalboard/docker/server_config.json config.json
+COPY --link --from=nodebuild --chown=1001:1001 /focalboard/webapp/pack /opt/focalboard/pack/
+COPY --link --from=gobuild --chown=1001:1001 /go/src/focalboard/bin/docker/focalboard-server /opt/focalboard/bin/
+COPY --link --from=gobuild --chown=1001:1001 /go/src/focalboard/LICENSE.txt /opt/focalboard/LICENSE.txt
+COPY --link --from=gobuild --chown=1001:1001 /go/src/focalboard/docker/server_config.json config.json
 
 COPY scripts/start.sh /usr/bin/start
 

@@ -90,7 +90,7 @@ jobs:
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Restore build cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cache
         with:
           path: |
@@ -102,7 +102,7 @@ jobs:
           key: buildkit-${{ runner.os }}-${{ matrix.arch }}
 
       - name: Inject build cache
-        uses: reproducible-containers/buildkit-cache-dance@v3.1.0
+        uses: reproducible-containers/buildkit-cache-dance@v3.1.2
         with:
           cache-map: |
             {

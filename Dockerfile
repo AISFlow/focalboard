@@ -108,6 +108,6 @@ RUN mkdir -p /opt/focalboard/data/files && \
     chown -R focalboard:focalboard /opt/focalboard
 
 VOLUME /opt/focalboard/data
-
+EXPOSE 8000
 ENTRYPOINT ["tini", "--", "start"]
 CMD ["focalboard-server"]
